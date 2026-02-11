@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	defaultAPIKey = "" // Set via WEATHER_API_KEY env var
+	defaultAPIKey = ""
 	baseURL       = "https://api.openweathermap.org/data/2.5"
 )
 
@@ -55,7 +55,7 @@ type ForecastData struct {
 		Wind struct {
 			Speed float64 `json:"speed"`
 		} `json:"wind"`
-		Pop float64 `json:"pop"` // probability of precipitation
+		Pop float64 `json:"pop"`
 	} `json:"list"`
 	City struct {
 		Name string `json:"name"`
@@ -148,7 +148,6 @@ func fetchForecast(city string, hours int) (string, error) {
 		return "", fmt.Errorf("failed to parse forecast: %w", err)
 	}
 
-	// Each entry is 3 hours, so hours/3 entries
 	entries := hours / 3
 	if entries > len(data.List) {
 		entries = len(data.List)
@@ -187,8 +186,14 @@ func main() {
 				mcp.Description("City name (e.g., 'Austin, TX', 'London', 'Tokyo')")),
 		),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			city, ok := req.Params.Arguments["city"].(string)
-			if !ok || city == "" {
+
+			args, ok := req.Params.Arguments.(map[string]any)
+			if !ok {
+				return mcp.NewToolResultError("invalid arguments"), nil
+			}
+
+			city, _ := args["city"].(string)
+			if city == "" {
 				return mcp.NewToolResultError("city is required"), nil
 			}
 
@@ -212,13 +217,19 @@ func main() {
 				mcp.Description("Hours to forecast (default 24, max 120)")),
 		),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			city, ok := req.Params.Arguments["city"].(string)
-			if !ok || city == "" {
+
+			args, ok := req.Params.Arguments.(map[string]any)
+			if !ok {
+				return mcp.NewToolResultError("invalid arguments"), nil
+			}
+
+			city, _ := args["city"].(string)
+			if city == "" {
 				return mcp.NewToolResultError("city is required"), nil
 			}
 
 			hours := 24
-			if h, ok := req.Params.Arguments["hours"].(float64); ok && h > 0 {
+			if h, ok := args["hours"].(float64); ok && h > 0 {
 				hours = int(h)
 				if hours > 120 {
 					hours = 120
