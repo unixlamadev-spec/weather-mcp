@@ -1,0 +1,18 @@
+.PHONY: build install clean
+
+BINARY_NAME=weather-mcp-server
+
+build:
+	go build -o $(BINARY_NAME) ./cmd/mcp-server/
+
+install: build
+	cp $(BINARY_NAME) $(GOPATH)/bin/ 2>/dev/null || cp $(BINARY_NAME) $(HOME)/go/bin/
+
+clean:
+	rm -f $(BINARY_NAME)
+
+release:
+	GOOS=darwin GOARCH=arm64 go build -o $(BINARY_NAME)-darwin-arm64 ./cmd/mcp-server/
+	GOOS=darwin GOARCH=amd64 go build -o $(BINARY_NAME)-darwin-amd64 ./cmd/mcp-server/
+	GOOS=linux GOARCH=amd64 go build -o $(BINARY_NAME)-linux-amd64 ./cmd/mcp-server/
+	GOOS=windows GOARCH=amd64 go build -o $(BINARY_NAME)-windows-amd64.exe ./cmd/mcp-server/
